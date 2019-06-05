@@ -12,126 +12,86 @@ namespace MovieDbBreakout.Controllers
 {
     public class HomeController : Controller
     {
-        public ActionResult Index(string DeckId)
-        {
-            string APIText = GetNewDeck(DeckId);
-            Deck deck = ConvertToDeck(APIText);
-            return View(deck);
-        }
-
-        public string GetAPIText(string title)
-        {
-            string APIkey = "62398519";
-            string URL = "https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=1";
-
-            HttpWebRequest request = WebRequest.CreateHttp(URL);
-
-            //There will sometimes be extra steps here between request and response
-
-            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-
-            StreamReader rd = new StreamReader(response.GetResponseStream());
-
-            string APIText = rd.ReadToEnd();
-
-            return APIText;
-        }
-
-        public Deck ConvertToDeck(string APIText)
-        {
-            JToken jsonData = JToken.Parse(APIText);
-            Deck d = new Deck();
-            d.DeckId = jsonData["deck_id"].ToString();
-
-            return d;
-        }
-
-        public string GetNewDeck(string DeckId)
-        {
-
-            string shuffleDeck = "https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=1";
-
-            HttpWebRequest request = WebRequest.CreateHttp(shuffleDeck);
-
-            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-
-            StreamReader rd = new StreamReader(response.GetResponseStream());
-
-            string APIText = rd.ReadToEnd();
-
-            //string deckID = APIText["deck_id"].ToString();
-
-
-            return APIText;
-        }
-
-       public List<Cards> GetCardList(string InitialDraw)
+            public Deck GetDeck()
             {
 
-            InitialDraw = $"https://deckofcardsapi.com/api/deck/<<3p40paa87x90>>/draw/?count=2";
+                string url = $"https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=1";
 
-            HttpWebRequest request = WebRequest.CreateHttp(InitialDraw);
+                HttpWebRequest request = WebRequest.CreateHttp(url);
+             
+                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+                StreamReader rd = new StreamReader(response.GetResponseStream());
 
-            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+                string APIText = rd.ReadToEnd();
+                Deck deck = ConvertToDeck(APIText);
+                return deck;
+            }
 
-            StreamReader rd = new StreamReader(response.GetResponseStream());
-
-            string APIText = rd.ReadToEnd();
-
-            //string deckID = APIText["deck_id"].ToString();
-
-            JToken json = JToken.Parse(InitialDraw);
-            List<JToken> cardTokens = json["InitialDraw"].ToList();
-
-            List<Cards> CardsList = new List<Cards>();
-
-            foreach(JToken j in cardTokens)
+            public Deck ConvertToDeck(string APIText)
             {
-                Cards c = new Cards();
-                c.value = j["value"].ToString();
-                c.suit = j["suit"].ToString();
-                c.code = j["code"].ToString();
-                CardsList.Add(c);
+                JToken t = JToken.Parse(APIText);
+                Deck deck = new Deck();
+                deck.DeckId = t["deck_id"].ToString();
+
+                Session["Deck"] = deck;
+                return deck;
             }
 
-            ViewBag.CardsList = CardsList;
+            public List<Cards> GetCards(Deck deck, int count = 5)
+            {
+                List<Cards> cards = new List<Cards>();
 
-            return CardsList;
+                string url = $"https://deckofcardsapi.com/api/deck/{deck.DeckId}/draw/?count={count}";
+
+                HttpWebRequest request = WebRequest.CreateHttp(url);
+                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+                StreamReader rd = new StreamReader(response.GetResponseStream());
+                string APIText = rd.ReadToEnd();
+
+                JToken t = JToken.Parse(APIText);
+      
+                Session["Deck"] = deck;
+                List<JToken> jtokens = t["cards"].ToList();
+                foreach (JToken jtoken in jtokens)
+                {
+                    Cards card = ConvertToCard(jtoken);
+                    cards.Add(card);
+                }
+
+                return cards;
             }
 
-        //        public List<Movie> ConvertListOfMovies(string APIText)
-        //        {
-        //            JToken json = JToken.Parse(APIText);
+            public Cards ConvertToCard(JToken jToken)
+            {
 
-        //            List<JToken> filmTokens = json["Search"].ToList();
+                Cards card = new Cards
+                {
+                    Image = jToken["image"].ToString(),
+                    Value = jToken["value"].ToString(),
+                    Suit = jToken["suit"].ToString(),
+                    Code = jToken["code"].ToString()
+                };
 
-        //            List<Movie> MovieResults = new List<Movie>();
+                return card;
+            }
 
-        //            foreach (JToken j in filmTokens)
-        //            {
-        //                //Make a movie and grab out the json data
-        //                Movie m = new Movie();
-        //                m.Title = j["Title"].ToString();
-        //                MovieResults.Add(m);
-        //            }
+            public ActionResult Index()
+            {
+                Deck deck = GetDeck();
+                List<Cards> cards = GetCards(deck);
+                Session["CardsInHand"] = cards;
 
-        //            return MovieResults;
-        //        }
-        //        public ActionResult About()
-        //        {
-        //            ViewBag.Message = "Your application description page.";
+                return View(cards);
+            }
 
-        //            return View();
-        //        }
-
-        //        public ActionResult Contact()
-        //        {
-        //            ViewBag.Message = "Your contact page.";
-
-        //            return View();
-        //        }
-        //    }
-        //}
-        
-    } 
-}
+            [HttpPost]
+            public ActionResult Index(int count, string Card1, string Card2, string Card3, string Card4, string Card5)
+            {
+                Deck deck = (Deck)Session["Deck"];
+                List<string> newCardList = new List<string>() { Card1, Card2, Card3, Card4, Card5 };
+                
+                return View();
+            
+            }
+        }
+    }

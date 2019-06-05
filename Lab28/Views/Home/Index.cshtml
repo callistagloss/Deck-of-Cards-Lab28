@@ -1,10 +1,29 @@
-﻿@model Lab28.Models.Deck
+﻿@model IEnumerable<Lab28.Models.Cards>
 
-<p>@Model.DeckId</p>
+<div class="container">
+    <form action="~/Home" method="post">
+        <div class="row">
+           
+            
+            @foreach (var card in Model)
+            {
+                <div class="col-md-2">
+                    <div class="row">
+                        </div>
+                        <h4>
+                            @card.Value
+                        </h4>
+                    </div>
+                    <div class="row">
+                        <img src="@card.Image" alt="Alternate Text" />
 
-@ViewBag.CardsList
+                    </div>
+                    
+                        
+                    
+            }
+                        </div>
 
-@foreach (string card in ViewBag.CardsList)
-{
-    card.suit;
-}
+
+    </form>
+</div>

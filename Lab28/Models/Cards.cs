@@ -8,9 +8,9 @@ namespace Lab28.Models
     public class Cards
     {
         public List<string> CardsList { get; set; }
-        public string image { get; set; }
-        public string value { get; set; }
-        public string suit { get; set; }
-        public string code { get; set; }
+        public string Image { get; set; }
+        public string Value { get; set; }
+        public string Suit { get; set; }
+        public string Code { get; set; }
     }
 }
