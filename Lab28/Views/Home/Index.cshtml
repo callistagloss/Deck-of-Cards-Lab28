@@ -1,0 +1,10 @@
+﻿@model Lab28.Models.Deck
+
+<p>@Model.DeckId</p>
+
+@ViewBag.CardsList
+
+@foreach (string card in ViewBag.CardsList)
+{
+    card.suit;
+}
